@@ -1,0 +1,47 @@
+import os
+import pandas as pd
+from dotenv import load_dotenv
+from urllib.parse import urlparse
+import requests
+
+# Load credentials from an .env file
+env_path = '.env'
+load_dotenv(dotenv_path=env_path)
+
+# Load credentials after dotenv is loaded
+username = os.getenv('fahminaibrahim2@gmail.com')
+password = os.getenv('08_Jaisanmostafa37')
+
+# Setup folders
+folder_path = 'data'
+data_file = os.path.join(folder_path, 'subset_OCO2_L2_Lite_FP_11.1r_20231127_110744_.txt')
+to_folder = os.path.join(folder_path, 'downloads', 'subset_OCO2_L2_Lite_FP_11.1r_20231127_110744_')
+is_force_download = False
+
+# Preview downloaded links list first
+df = pd.read_csv(data_file, sep=" ", header=None)
+print('Found', len(df), 'links')
+pd.set_option('display.max_colwidth', 200)
+df.head(10)
+
+# Function to download files from URLs in a text file
+def download_files(data_file, username, password, to_folder):
+    with open(data_file, "r") as data_file:
+        for line in data_file:
+            url = line.strip()
+            filename = os.path.basename(urlparse(url).path)
+            file_path = os.path.join(to_folder, filename)
+            
+            # Create necessary directories if they don't exist
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+            if is_force_download or not os.path.isfile(file_path):
+                print("Downloading file:", url)
+                response = requests.get(url, auth=(username, password))
+                with open(file_path, 'wb') as file:
+                    file.write(response.content)
+            else:
+                print("File is already downloaded:", filename)
+
+# Call the download_files function
+download_files(data_file, username, password, to_folder)
