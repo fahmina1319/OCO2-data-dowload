@@ -1,0 +1,57 @@
+// Define a region of interest (ROI) for Texas.
+var texas = ee.Geometry.Polygon(
+  [[[-106.6455078125, 25.83784791196258],
+    [-93.7646484375, 25.83784791196258],
+    [-93.7646484375, 36.49339772197668],
+    [-106.6455078125, 36.49339772197668],
+    [-106.6455078125, 25.83784791196258]]]);
+
+// Define the time range for Landsat 8 images (2016).
+var startDate = '2016-01-01';
+var endDate = '2016-12-31';
+
+// Filter Landsat 8 images based on the specified criteria.
+var landsatCollection = ee.ImageCollection('LANDSAT/LC08/C02/T1_L2')
+  .filterBounds(texas)
+  .filterDate(startDate, endDate);
+
+// Select the 'ST_B10' band for the Land Surface Temperature (LST).
+var lstBand = landsatCollection.select('ST_B10');
+
+// Check if there are valid images in the collection.
+var countValidImages = lstBand.size();
+
+// Print the count of valid images.
+print('Count of valid images:', countValidImages);
+
+// Proceed only if there are valid images.
+if (countValidImages.gt(0)) {
+  // Calculate the mean LST for the entire year.
+  var meanLST = lstBand.mean();
+
+  // Print the information about the resulting collection.
+  print('Mean LST for Texas in 2016:', meanLST);
+
+  // Visualization parameters (you can adjust these based on your needs).
+  var visParams = {
+    min: 280,  // set your minimum display value
+    max: 310,  // set your maximum display value
+    palette: ['blue', 'cyan', 'green', 'yellow', 'red']
+  };
+
+  // Display the mean LST on the map.
+  Map.centerObject(texas, 6);  // Adjust the zoom level as needed.
+  Map.addLayer(meanLST, visParams, 'Mean LST');
+
+  // Export the image to Google Drive (adjust parameters as needed).
+  Export.image.toDrive({
+    image: meanLST,
+    description: 'Mean_LST_2016_Texas',
+    scale: 30,  // set the scale (resolution)
+    region: texas,
+    folder: 'YourFolderName',  // specify your Google Drive folder
+    maxPixels: 1e13  // adjust as needed based on your computation
+  });
+} else {
+  print('No valid images found for the specified time and region.');
+}
