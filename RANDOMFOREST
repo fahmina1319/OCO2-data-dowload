@@ -1,0 +1,74 @@
+# install packages
+install.packages("stats")
+install.packages("dplyr")
+install.packages("randomForest")
+
+#Load required libraries
+
+library(stats)
+library(dplyr)
+library(randomForest)
+library(tidyverse)
+
+#load data 
+mdata <- read.csv("C:\\Users\\fahmi\\OneDrive\\Desktop\\proj_data\\analysis\\rf\\rf.csv")
+head(mdata)
+
+#variable selection
+str(mdata)
+
+#splitting data in training and testing
+index= sample(2,nrow(mdata),replace= TRUE, prob=c(0.8,0.2))
+
+#training data
+
+Training = data[index==1,]
+
+#testing data
+
+Testing = data[index==2,]
+
+#Random Forest Model
+sum(is.na(Training))
+
+# Imputation
+install.packages("imputeTS")
+library(imputeTS)
+
+# Assuming CO2 is the response variable
+Training_imputed <- na_interpolation(Training)
+
+# Random Forest Model
+RFM <- randomForest(CO2 ~ ., data = Training_imputed)
+print(RFM)
+
+
+#Evaluating Model Accuracy
+
+CO2_pred = predict(RFM,Testing_n)
+Testing_n$CO2_pred = CO2_pred
+view (Testing_n)
+
+# Remove rows with missing values in either CO2 or CO2_pred
+Testing_n <- na.omit(Testing)
+
+# Evaluating Model Accuracy for Regression
+MAE <- mean(abs(Testing_n$CO2 - Testing_n$CO2_pred))
+MSE <- mean((Testing_n$CO2 - Testing_n$CO2_pred)^2)
+R_squared <- 1 - (sum((Testing_n$CO2 - Testing_n$CO2_pred)^2) / sum((Testing_n$CO2 - mean(Testing_n$CO2))^2))
+
+cat("Mean Absolute Error (MAE):", MAE, "\n")
+cat("Mean Squared Error (MSE):", MSE, "\n")
+cat("R-squared:", R_squared, "\n")
+
+
+#Building confusion matrix
+
+CFM= table(Testing_n$CO2,Testing_n$CO2_pred)
+CFM
+classification_Accuracy= sum(diag(CFM)/sum(CFM))
+classification_Accuracy
+
+# Save Testing data as CSV
+write.csv(Testing_n, "C:/Users/fahmi/OneDrive/Desktop/proj_data/analysis/rf/Testing_data.csv", row.names = FALSE)
+
