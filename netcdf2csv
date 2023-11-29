@@ -1,0 +1,62 @@
+setwd('C:\\Users\\fahmi\\OneDrive\\Desktop\\proj_data\\data\\gosat')
+dir()
+library(readr)
+library(dplyr)
+library(tidyverse)
+library(tidyr)
+library(ggplot2)
+library(viridisLite)
+install.packages("weathermetrics")
+install.packages("ncdf4")
+library(ncdf4)
+library(chron)
+library(RColorBrewer)
+library(lattice)
+ncin1<- nc_open("C:\\Users\\fahmi\\OneDrive\\Desktop\\proj_data\\data\\gosat\\acos_LtCO2_160524_v201202_B7310A_161107171409s.nc4")
+print (ncin1)
+
+install.packages("raster")
+library(raster)
+install.packages("zoo")
+library(zoo)
+install.packages("rts")
+library(rts)
+install.packages("Rcpp")
+library(raster)
+
+#install.packages("ncdf4")
+install.packages("lubridate")
+library(ncdf4)
+
+# Read variables from the NetCDF file
+xco2 <- ncvar_get(ncin1, "xco2")
+latitude <- ncvar_get(ncin1, "latitude")
+longitude <- ncvar_get(ncin1, "longitude")
+quality_flag <- ncvar_get(ncin1, "xco2_quality_flag")
+sounding_id <- ncvar_get(ncin1, "sounding_id")
+
+# Convert data to a data frame
+df <- data.frame(
+  Xco2 = xco2,
+  Latitude = latitude,
+  Longitude = longitude,
+  QualityFlag = quality_flag,
+  SoundingID = sounding_id
+)
+
+
+# Convert the sounding_id to a datetime format (assuming it's in a numeric format)
+df$DateTime <- as.POSIXct(strptime(as.character(df$SoundingID), format = "%Y%m%d%H%M%S"))
+
+# Optionally, filter the data based on quality flag or other criteria
+# df <- df[df$QualityFlag == 0, ]
+
+# Write the data frame to a CSV file
+csv_file <- "C:/Users/fahmi/OneDrive/Desktop/proj_data/data/gosat/acos_LtCO2_160524_v201202_B7310A_161107171409s.csv"
+write.csv(df, csv_file, row.names = FALSE)
+
+
+
+
+
+
